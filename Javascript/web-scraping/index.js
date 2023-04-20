@@ -1,5 +1,5 @@
 const express = require('express');
-const axios = require('axios');
+const puppeteer = require('puppeteer');
 const cheerio = require('cheerio');
 
 const PORT = 8000;
@@ -8,8 +8,17 @@ function scrapeData(url, itemProductCssSelector, itemProductInfosCssSelector, It
 
     const obj = {};
 
-    return axios(url).then(response => {
-        const html = response.data;
+    return puppeteer
+    .launch()
+    .then(function(browser) {
+      return browser.newPage();
+    })
+    .then(function(page) {
+      return page.goto(url).then(function() {
+        return page.content();
+      })
+    })
+    .then(function(html) {
         
         // Get all the html content
         const $ = cheerio.load(html);
@@ -56,7 +65,7 @@ app.get("/api/", async (req, res) => {
     const girlfriendCollectiveUrl = "https://girlfriend.com/collections/sweatshirts";
 
     // arrray of products, nb products, average price
-    const girlfriendCollectiveData = await scrapeData(girlfriendCollectiveUrl, '.content-start div', 'a', 'h3', 'span');
+    const girlfriendCollectiveData = await scrapeData(girlfriendCollectiveUrl, '.content-start .relative', 'a', 'h3', 'span');
 
     /* ORGANIC BASICS */
     const organicBasicsUrl = "https://organicbasics.com/collections/all-womens-products?filter=sweaters";
